@@ -6,7 +6,8 @@
   background-color: #777777;
   opacity: 0.45;
   position: absolute;
-  bottom: 0;
+  bottom: 48px;
+  left: 48px;
   z-index: 2;
   border-radius: 4px;
   touch-action: none;
