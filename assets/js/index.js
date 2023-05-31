@@ -206,12 +206,25 @@ const create_new_notebook = async (_name, _color) => {
 const open_notebook = async (_id) => {
   console.log(`opened ${_id}`);
   current_notebook_id = _id;
+
+  const notebookBackdrop = document.createElement('div');
+  notebookBackdrop.classList = 'notebook-backdrop';
+  document.body.appendChild(notebookBackdrop);
+  await canvas_load_id(current_notebook_id);
+  if (notebookBackdrop.requestFullscreen) {
+    notebookBackdrop.requestFullscreen();
+  } else if (notebookBackdrop.webkitRequestFullscreen) {
+  notebookBackdrop.webkitRequestFullscreen();
+  } else if (notebookBackdrop.msRequestFullscreen) {
+  notebookBackdrop.msRequestFullscreen();
+  }
 };
 
 const close_notebook = async () => {
   if (current_notebook_id === null) return;
   console.log('closed')
   current_notebook_id = null;
+  document.body.removeChild(document.querySelector('.notebook-backdrop'));
 };
 
 render_notebooks();

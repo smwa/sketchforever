@@ -1,0 +1,29 @@
+.action-container {
+  height: 3rem;
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  background-color: #777777;
+  opacity: 0.45;
+  position: absolute;
+  bottom: 0;
+  z-index: 2;
+  border-radius: 4px;
+}
+
+.action-container > * {
+  height: 3rem;
+  cursor: pointer;
+  height: calc(100% - 1rem);
+  width: 2rem;
+  padding: 0.5rem;
+}
+
+.action-handle {
+  cursor: move;
+}
+
+.action-handle > * {
+  height: 100%;
+  width: 100%;
+}
