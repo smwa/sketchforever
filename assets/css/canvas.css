@@ -28,7 +28,7 @@
   user-select: none;
 }
 
-.action-handle > * {
+.action-handle > *, .action-full-screen > * {
   height: 100%;
   width: 100%;
 }
