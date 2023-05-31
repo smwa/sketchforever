@@ -25,10 +25,33 @@ const canvas_load_id = async (_id) => {
   canvas_container.appendChild(action_container);
 
 
-  make_action_container_draggable(action_container);
+
+
+  const canvas_container_position = { x: 0, y: 0 }
+
+  interact('.action-container')
+  .draggable({
+    inertia: true,
+    modifiers: [
+      interact.modifiers.restrictRect({
+        restriction: 'parent',
+        endOnly: true
+      })
+    ],
+    allowFrom: '.action-handle',
+    listeners: {
+      move (event) {
+        canvas_container_position.x += event.dx
+        canvas_container_position.y += event.dy
+  
+        event.target.style.transform =
+          `translate(${canvas_container_position.x}px, ${canvas_container_position.y}px)`
+      },
+    }
+  });
 
   requestAnimationFrame(() => setTimeout(() => {
-    feather.replace();
+    feather.replace();    
   }, 0))
 };
 
@@ -36,40 +59,4 @@ const canvas_close = async () => {
   notebook = null;
   window.history.back();
   canvas_container = null;
-};
-
-const make_action_container_draggable = (action_container) => {
-
-  const dragMouseDown = (e) => {
-    e = e || window.event;
-    e.preventDefault();
-    // get the mouse cursor position at startup:
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    document.onmouseup = closeDragElement;
-    // call a function whenever the cursor moves:
-    document.onmousemove = elementDrag;
-  }
-
-  const elementDrag = (e) => {
-    e = e || window.event;
-    e.preventDefault();
-    // calculate the new cursor position:
-    pos1 = pos3 - e.clientX;
-    pos2 = pos4 - e.clientY;
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    // set the element's new position:
-    action_container.style.top = Math.min(canvas_container.scrollHeight - 48, Math.max(0, (action_container.offsetTop - pos2))) + "px";
-    action_container.style.left = Math.min(canvas_container.scrollWidth - 48, Math.max(0, (action_container.offsetLeft - pos1))) + "px";
-  }
-
-  const closeDragElement = () => {
-    // stop moving when mouse button is released:
-    document.onmouseup = null;
-    document.onmousemove = null;
-  }
-  
-  var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-  document.querySelector('.action-handle').onmousedown = dragMouseDown;
 };
