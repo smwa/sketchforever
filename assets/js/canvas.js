@@ -3,6 +3,7 @@ let canvas_container = null;
 
 let pen_color = '#4169e1';
 let pen_size = 0.5;
+let is_erasing = false;
 
 const canvas_load_id = async (_id) => {
   try {
@@ -70,6 +71,24 @@ const canvas_load_id = async (_id) => {
 
   action_container.appendChild(action_size);
 
+    // Eraser
+    const action_eraser = document.createElement('div');
+    action_eraser.classList = 'action-eraser';
+    action_eraser.onclick = (e) => {
+      is_erasing = !is_erasing;
+      if (is_erasing) {
+        document.querySelector('.action-eraser svg').classList.add('active');
+      }
+      else {
+        document.querySelector('.action-eraser svg').classList.remove('active');
+      }
+    }
+  
+    const action_eraser_icon = document.createElement('i');
+    action_eraser_icon.dataset.feather = 'delete';
+    action_eraser.appendChild(action_eraser_icon);
+  
+    action_container.appendChild(action_eraser);
 
   // Home
   const action_home = document.createElement('div');

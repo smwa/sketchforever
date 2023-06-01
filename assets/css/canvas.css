@@ -28,9 +28,13 @@
   user-select: none;
 }
 
-.action-handle > *, .action-full-screen > *, .action-size-picker > :first-child {
+.action-handle > *, .action-full-screen > *, .action-size-picker > :first-child, .action-eraser > * {
   height: 100%;
   width: 100%;
+}
+
+.action-eraser .active {
+  stroke: #ff83a8;
 }
 
 .action-size-picker {
