@@ -136,6 +136,7 @@ const canvas_load_id = async (_id) => {
       el: '.action-color-picker',
       theme: 'monolith',
       default: pen_color,
+      container: '.notebook-backdrop',
       components: {
           preview: true,
           opacity: true,
