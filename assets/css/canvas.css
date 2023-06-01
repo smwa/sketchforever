@@ -28,7 +28,42 @@
   user-select: none;
 }
 
-.action-handle > *, .action-full-screen > * {
+.action-handle > *, .action-full-screen > *, .action-size-picker > :first-child {
   height: 100%;
   width: 100%;
+}
+
+.action-size-picker {
+  position: relative;
+}
+
+.action-size-slider-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 10rem;
+  background-color: #777777;
+  position: absolute;
+  bottom: 4rem;
+  border-radius: 5px;
+  padding: 0.5rem;
+}
+
+.action-size-slider {
+  position: relative;
+  top: 0;
+  transform: rotate(-90deg);
+  width: 9rem;
+  height: 1rem;
+}
+
+
+@media (prefers-color-scheme: dark) {
+  
+}
+
+
+.hidden {
+  display: none;
 }

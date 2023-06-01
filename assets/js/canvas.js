@@ -1,6 +1,9 @@
 let notebook = null;
 let canvas_container = null;
 
+let pen_color = '#4169e1';
+let pen_size = 0.5;
+
 const canvas_load_id = async (_id) => {
   try {
     notebook = (await LF.getItem(NOTEBOOK_KEY)).filter((notebook) => notebook.id === _id)[0];
@@ -23,6 +26,49 @@ const canvas_load_id = async (_id) => {
   action_handle.appendChild(action_handle_icon);
 
   action_container.appendChild(action_handle);
+
+  // Color Picker
+  const action_color = document.createElement('div');
+  action_color.classList = 'action-color-picker';
+
+  const action_color_icon = document.createElement('i');
+  action_color_icon.dataset.feather = 'aperture';
+  action_color.appendChild(action_color_icon);
+
+  action_container.appendChild(action_color);
+
+  // Size Picker
+  const action_size = document.createElement('div');
+  action_size.classList = 'action-size-picker';
+  action_size.onclick = (e) => {
+    if (e.target.closest('.action-size-slider-container') !== null) return;
+    const slider_container = document.querySelector('.action-size-slider-container');
+    if (slider_container.classList.contains('hidden')) {
+      slider_container.classList.remove('hidden');
+    }
+    else {
+      slider_container.classList.add('hidden');
+    }
+  }
+
+  const action_size_icon = document.createElement('i');
+  action_size_icon.dataset.feather = 'edit-2';
+  action_size.appendChild(action_size_icon);
+
+  const action_size_slider_container = document.createElement('div');
+  action_size_slider_container.classList = 'action-size-slider-container hidden';
+  const action_size_slider = document.createElement('input');
+  action_size_slider.onchange = (evt) => {
+    pen_size = (parseInt(evt.target.value, 10) / 100.0).toFixed(2);
+  };
+  action_size_slider.type = 'range';
+  action_size_slider.min = 0;
+  action_size_slider.max = 100;
+  action_size_slider.classList = 'action-size-slider';
+  action_size_slider_container.appendChild(action_size_slider);
+  action_size.appendChild(action_size_slider_container);
+
+  action_container.appendChild(action_size);
 
 
   // Home
@@ -62,7 +108,6 @@ const canvas_load_id = async (_id) => {
   canvas_container.appendChild(action_container);
 
   const canvas_container_position = { x: 0, y: 0 }
-
   interact('.action-container')
   .draggable({
     inertia: true,
@@ -85,7 +130,51 @@ const canvas_load_id = async (_id) => {
   });
 
   requestAnimationFrame(() => setTimeout(() => {
-    feather.replace();    
+    feather.replace();   
+    
+    const pickr = Pickr.create({
+      el: '.action-color-picker',
+      theme: 'monolith',
+      default: pen_color,
+      components: {
+          preview: true,
+          opacity: true,
+          hue: true,
+  
+          interaction: {
+              hex: false,
+              rgba: false,
+              hsla: false,
+              hsva: false,
+              cmyk: false,
+              input: true,
+              clear: false,
+              cancel: true,
+              save: true
+          }
+      }
+    });
+
+    pickr.on('init', instance => {
+      const {result} = instance.getRoot().interaction;
+      result.addEventListener('keydown', e => {
+          // Detect whever the user pressed "Enter" on their keyboard
+          if (e.key === 'Enter') {
+              instance.applyColor(); // Save the currently selected color
+              instance.hide(); // Hide modal
+          }
+      }, {capture: true});
+  });
+
+  pickr.on('save', (color, instance) => {
+    pen_color = '#' + color.toHEXA().join('');
+    instance.hide();
+  });
+
+  pickr.on('cancel', (instance) => {
+    instance.hide();
+  });
+
   }, 0))
 };
 
