@@ -270,6 +270,8 @@ const on_new_notebook_label_blur = (evt) => {
     }
     evt.preventDefault();
   }
+  evt.target.onblur = null;
+  evt.target.onkeydown = null;
   LF.getItem(NOTEBOOK_KEY).then((notebooks) => {
     const new_color = NOTEBOOK_COLORS[notebooks.length % NOTEBOOK_COLORS.length];
     create_new_notebook(evt.target.value, new_color);
