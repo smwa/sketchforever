@@ -45,6 +45,9 @@ const canvas_load_id = async (_id) => {
   canvas.onpointerup = on_pointer_up;
   canvas_container.appendChild(canvas);
   observeElementResize(canvas_container, () => {
+    if (document.querySelector('.notebook-backdrop') === null) {
+      return;
+    }
     const canvas_container_bounding_rectangle = document.querySelector('.notebook-backdrop').getBoundingClientRect();
     const canvas = document.querySelector('#notebook-canvas');
     canvas.width = canvas_container_bounding_rectangle.width;

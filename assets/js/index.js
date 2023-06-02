@@ -204,7 +204,6 @@ const create_new_notebook = async (_name, _color) => {
 };
 
 const open_notebook = async (_id) => {
-  console.log(`opened ${_id}`);
   current_notebook_id = _id;
 
   const notebookBackdrop = document.createElement('div');
@@ -222,7 +221,6 @@ const open_notebook = async (_id) => {
 
 const close_notebook = async () => {
   if (current_notebook_id === null) return;
-  console.log('closed')
   current_notebook_id = null;
   document.body.removeChild(document.querySelector('.notebook-backdrop'));
 };
