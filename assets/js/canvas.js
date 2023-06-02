@@ -350,9 +350,10 @@ const draw_line = (evt, from_x, from_y, to_x, to_y) => {
   }
 
   const _is_erasing = is_erasing_including_buttons(evt.pointerId);
+  const pressure_multiplier = Math.pow(evt.pressure) * 4;
 
   line.graphics
-    .setStrokeStyle((1 + pen_size * MAX_PEN_SIZE_PIXELS) * evt.pressure * (_is_erasing ? 2.0 : 1.0), 'round')
+    .setStrokeStyle((1 + pen_size * MAX_PEN_SIZE_PIXELS) * pressure_multiplier * (_is_erasing ? 2.0 : 1.0), 'round')
     .beginStroke(pen_color);
   line.graphics.moveTo(from_x, from_y);
   line.graphics.lineTo(to_x, to_y);
