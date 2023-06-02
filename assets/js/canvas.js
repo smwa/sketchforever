@@ -157,7 +157,7 @@ const canvas_load_id = async (_id, _page) => {
 
   // Home
   const action_home = document.createElement('div');
-  action_home.classList = 'action-full-screen';
+  action_home.classList = 'action-home';
   action_home.onclick = (e) => {
     window.history.back();
   }
@@ -187,6 +187,18 @@ const canvas_load_id = async (_id, _page) => {
 
   action_container.appendChild(action_full_screen);
 
+  // Download
+  const action_download = document.createElement('div');
+  action_download.classList = 'action-download';
+  action_download.onclick = (e) => {
+    download_canvas();
+  }
+
+  const action_download_icon = document.createElement('i');
+  action_download_icon.dataset.feather = 'download';
+  action_download.appendChild(action_download_icon);
+
+  action_container.appendChild(action_download);
 
   // Action container
   canvas_container.appendChild(action_container);
@@ -293,6 +305,21 @@ const save_canvas = () => {
   });
   LF.setItem(NOTEBOOK_KEY, notebooks);
 };
+
+const download_canvas = async () => {
+  function download(url, filename) {
+    fetch(url)
+      .then(response => response.blob())
+      .then(blob => {
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        link.click();
+    })
+    .catch(console.error);
+  }
+  download(line.cacheCanvas.toDataURL(), `sketchforever-${notebook_id}-${page + 1}`);
+}
 
 const create_pointer_data = (evt) => {
   if (!pointer_data[evt.pointerId]) {
