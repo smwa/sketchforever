@@ -6,7 +6,7 @@ let line = null;
 let page = 0;
 
 let pen_color = '#4169e1';
-let pen_size = 0.25;
+let pen_size = 0.15;
 const MAX_PEN_SIZE_PIXELS = 36;
 let is_erasing = false;
 
