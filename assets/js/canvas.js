@@ -7,7 +7,7 @@ let pen_size = 0.25;
 const MAX_PEN_SIZE_PIXELS = 36;
 let is_erasing = false;
 
-// keyed by evt.identifier, store last known position, buttons, and pointerType.
+// keyed by evt.identifier, store last known position, buttons, current line being drawn, and pointerType.
 // May be used later to treat touch differently if there's a pen in use
 const pointer_data = {};
 
@@ -41,6 +41,7 @@ const canvas_load_id = async (_id) => {
   canvas.classList = 'notebook-canvas';
   canvas.onpointerdown = on_pointer_down;
   canvas.onpointermove = on_pointer_move;
+  canvas.onpointerup = on_pointer_up;
   canvas_container.appendChild(canvas);
   observeElementResize(canvas_container, () => {
     const canvas_container_bounding_rectangle = document.querySelector('.notebook-backdrop').getBoundingClientRect();
@@ -248,7 +249,7 @@ const canvas_close = async () => {
   easlejs_stage = null;
 };
 
-const on_pointer_any = (evt) => {
+const create_pointer_data = (evt) => {
   if (!pointer_data[evt.identifier]) {
     pointer_data[evt.identifier] = {
       pointerType: evt.pointerType,
@@ -259,51 +260,69 @@ const on_pointer_any = (evt) => {
       },
     };
   }
-}
+};
 
-const on_pointer_down = (evt) => {
-  on_pointer_any(evt);
-
-  if ((is_erasing && (pointer_data[evt.identifier].buttons & 1)) || (pointer_data[evt.identifier].buttons & 32) || (pointer_data[evt.identifier].buttons & 2)) {
-    // TODO handle erasing
-  }
-  else if (pointer_data[evt.identifier].buttons & 1) {
-    const line = new createjs.Shape();
-    line.graphics
-      .setStrokeStyle((1 + pen_size * MAX_PEN_SIZE_PIXELS) * evt.pressure, 'round')
-      .beginStroke(pen_color);
-    line.graphics.moveTo(evt.clientX, evt.clientY);
-    line.graphics.lineTo(evt.clientX, evt.clientY);
-    line.graphics.endStroke();
-    easlejs_stage.addChild(line);
-    easlejs_stage.update();
-  }
-
+const update_pointer_data = (evt) => {
   pointer_data[evt.identifier].buttons = evt.buttons;
   pointer_data[evt.identifier].position.x = evt.clientX;
   pointer_data[evt.identifier].position.y = evt.clientY;
 };
 
+const draw_line = (evt, from_x, from_y, to_x, to_y) => {
+  if (evt.pressure < 0.0001) {
+    return;
+  }
+
+  const normalized_exponential_tilt = Math.pow(Math.max(Math.abs(evt.tiltX), Math.abs(evt.tiltY)) / 90.0, 2);
+  let color = pen_color;
+  if (normalized_exponential_tilt > 0.0001) {
+    if (color.length > 7) {
+      let current_transparency = parseInt(color.substring(7), 16) / 255;
+      color = color.substring(0, 7) + (((255 - normalized_exponential_tilt * 255) * current_transparency) + Math.pow(16, 6)).toString(16).substring(5, 7);
+    }
+    else {
+      color = color + ((255 - normalized_exponential_tilt * 255) + Math.pow(16, 6)).toString(16).substring(5, 7);
+    }
+  }
+
+  const line = new createjs.Shape();
+  line.graphics
+    .setStrokeStyle((1 + pen_size * MAX_PEN_SIZE_PIXELS) * evt.pressure, 'round')
+    .beginStroke(color);
+  line.graphics.moveTo(from_x, from_y);
+  line.graphics.lineTo(to_x, to_y);
+  // line.graphics.endStroke();
+  easlejs_stage.addChild(line);
+  easlejs_stage.update();
+};
+
+const on_pointer_down = (evt) => {
+  create_pointer_data(evt);
+
+  if ((is_erasing && (pointer_data[evt.identifier].buttons & 1)) || (pointer_data[evt.identifier].buttons & 32) || (pointer_data[evt.identifier].buttons & 2)) {
+    // TODO handle erasing
+  }
+  else if (pointer_data[evt.identifier].buttons & 1) {
+    draw_line(evt, evt.clientX, evt.clientY, evt.clientX, evt.clientY);
+  }
+
+  update_pointer_data(evt);
+};
+
 const on_pointer_move = (evt) => {
-  on_pointer_any(evt);
+  create_pointer_data(evt);
 
   if ((is_erasing && (pointer_data[evt.identifier].buttons & 1)) || (pointer_data[evt.identifier].buttons & 32) || (pointer_data[evt.identifier].buttons & 2)) {
     // TODO handle erasing
     return;
   }
   else if (pointer_data[evt.identifier].buttons & 1) {
-    const line = new createjs.Shape();
-    line.graphics
-      .setStrokeStyle((1 + pen_size * MAX_PEN_SIZE_PIXELS) * evt.pressure, 'round')
-      .beginStroke(pen_color);
-    line.graphics.moveTo(pointer_data[evt.identifier].position.x, pointer_data[evt.identifier].position.y);
-    line.graphics.lineTo(evt.clientX, evt.clientY);
-    line.graphics.endStroke();
-    easlejs_stage.addChild(line);
-    easlejs_stage.update();
+    draw_line(evt, pointer_data[evt.identifier].position.x, pointer_data[evt.identifier].position.y, evt.clientX, evt.clientY);
   }
 
-  pointer_data[evt.identifier].buttons = evt.buttons;
-  pointer_data[evt.identifier].position.x = evt.clientX;
-  pointer_data[evt.identifier].position.y = evt.clientY;
+  update_pointer_data(evt);
+};
+
+const on_pointer_up = (evt) => {
+
 };
