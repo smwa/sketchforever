@@ -196,7 +196,7 @@ const canvas_load_id = async (_id) => {
     
     easlejs_stage = new createjs.Stage("notebook-canvas");
     line = easlejs_stage.addChild(new createjs.Shape());
-    line.cache(0,0,16000,16000);
+    line.cache(0,0,4092,4092);
 
     const pickr = Pickr.create({
       el: '.action-color-picker',
