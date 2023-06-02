@@ -1,7 +1,9 @@
-let notebook = null;
+let notebooks = null;
+let notebook_id = null;
 let canvas_container = null;
 let easlejs_stage = null;
 let line = null;
+let page = 0;
 
 let pen_color = '#4169e1';
 let pen_size = 0.25;
@@ -22,13 +24,26 @@ const observeElementResize = (element, callback) => {
   };
 };
 
-const canvas_load_id = async (_id) => {
+const canvas_load_id = async (_id, _page) => {
+  notebook_id = _id;
   try {
-    notebook = (await LF.getItem(NOTEBOOK_KEY)).filter((notebook) => notebook.id === _id)[0];
+    notebooks = await LF.getItem(NOTEBOOK_KEY);
   }
   catch (e) {
     window.location = './';
+    return;
   }
+  page = Math.max(0, (typeof _page !== 'undefined' ? _page : 0));
+  if (notebooks.filter((notebook) => notebook.id === notebook_id)[0].pages.length <= page) {
+    notebooks = notebooks.map((notebook) => {
+      if (notebook.id === notebook_id) {
+        notebook.pages.push(null);
+      }
+      return notebook;
+    });
+    LF.setItem(NOTEBOOK_KEY, notebooks);
+  }
+
   canvas_container = document.querySelector('.notebook-backdrop');
 
   const canvas = document.createElement('canvas');
@@ -200,6 +215,14 @@ const canvas_load_id = async (_id) => {
     easlejs_stage = new createjs.Stage("notebook-canvas");
     line = easlejs_stage.addChild(new createjs.Shape());
     line.cache(0,0,3840,2160);
+    const page_content = notebooks.filter((notebook) => notebook.id === notebook_id)[0].pages[page];
+    if (page_content !== null) {
+      const image_to_load = new Image();
+      image_to_load.onload = () => {
+        line.cacheCanvas.getContext('2d').drawImage(image_to_load, 0, 0);
+      };
+      image_to_load.src = page_content;
+    }
 
     const pickr = Pickr.create({
       el: '.action-color-picker',
@@ -249,10 +272,21 @@ const canvas_load_id = async (_id) => {
 };
 
 const canvas_close = async () => {
-  notebook = null;
+  notebooks = null;
+  notebook_id = null;
   window.history.back();
   canvas_container = null;
   easlejs_stage = null;
+};
+
+const save_canvas = () => {
+  notebooks = notebooks.map((notebook) => {
+    if (notebook.id === notebook_id) {
+      notebook.pages[page] = line.cacheCanvas.toDataURL();
+    }
+    return notebook;
+  });
+  LF.setItem(NOTEBOOK_KEY, notebooks);
 };
 
 const create_pointer_data = (evt) => {
@@ -318,5 +352,5 @@ const on_pointer_move = (evt) => {
 };
 
 const on_pointer_up = (evt) => {
-
+  save_canvas();
 };

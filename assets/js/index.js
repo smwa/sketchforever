@@ -43,7 +43,26 @@ const NOTEBOOK_COLORS = [
 let current_notebook_id = null;
 
 const render_notebooks = async () => {
-  LF.getItem(NOTEBOOK_KEY).then((value) => {
+  LF.getItem(NOTEBOOK_KEY).then(async (value) => {
+
+
+    // TODO remove after a few weeks, fixes ID's that are int instead of string
+    let update_broken_ids = false;
+    const notebooks = value.map((notebook) => {
+      if (typeof notebook.id === 'number') {
+        update_broken_ids = true;
+        notebook.id = notebook.id.toString();
+      }
+      return notebook;
+    });
+    if (update_broken_ids) {
+      console.log("Updating broken notebook ids");
+      await LF.setItem(NOTEBOOK_KEY, notebooks);
+      setTimeout(render_notebooks, 0);
+      return;
+    }
+
+
     notebook_element.innerHTML = '';
     value.forEach((notebook) => {
 
@@ -191,7 +210,7 @@ const create_new_notebook = async (_name, _color) => {
     throw new Error("Color is not valid, must be a hex string, i.e. #4169e1");
   }
   const value = await LF.getItem(NOTEBOOK_KEY);
-  const id = parseInt((new Date()).getTime(), 10);
+  const id = parseInt((new Date()).getTime(), 10).toString();
   value.push({
     id: id,
     name: _name,
