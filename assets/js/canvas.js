@@ -6,7 +6,7 @@ let line = null;
 let page = 0;
 
 let pen_color = '#4169e1';
-let pen_size = 0.15;
+let pen_size = 0.2;
 const MAX_PEN_SIZE_PIXELS = 36;
 let is_erasing = false;
 
@@ -350,7 +350,7 @@ const draw_line = (evt, from_x, from_y, to_x, to_y) => {
   }
 
   const _is_erasing = is_erasing_including_buttons(evt.pointerId);
-  const pressure_multiplier = Math.pow(evt.pressure * 2, 2);
+  const pressure_multiplier = Math.pow(evt.pressure, 2) * 2;
 
   line.graphics
     .setStrokeStyle((1 + pen_size * MAX_PEN_SIZE_PIXELS) * pressure_multiplier * (_is_erasing ? 2.0 : 1.0), 'round')
