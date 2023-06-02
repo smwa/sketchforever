@@ -28,6 +28,10 @@ const canvas_load_id = async (_id, _page) => {
   notebook_id = _id;
   try {
     notebooks = await LF.getItem(NOTEBOOK_KEY);
+    if (!notebooks.length || notebooks.filter((notebook) => notebook.id === notebook_id).length < 1) {
+      window.location = './';
+      return;
+    }
   }
   catch (e) {
     window.location = './';
@@ -220,6 +224,7 @@ const canvas_load_id = async (_id, _page) => {
       const image_to_load = new Image();
       image_to_load.onload = () => {
         line.cacheCanvas.getContext('2d').drawImage(image_to_load, 0, 0);
+        easlejs_stage.update();
       };
       image_to_load.src = page_content;
     }
