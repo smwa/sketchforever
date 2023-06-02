@@ -196,7 +196,7 @@ const canvas_load_id = async (_id) => {
     
     easlejs_stage = new createjs.Stage("notebook-canvas");
     line = easlejs_stage.addChild(new createjs.Shape());
-    // line.cache(0,0,3840,2160);
+    line.cache(0,0,3840,2160);
 
     const pickr = Pickr.create({
       el: '.action-color-picker',
@@ -288,8 +288,8 @@ const draw_line = (evt, from_x, from_y, to_x, to_y) => {
   line.graphics.moveTo(from_x, from_y);
   line.graphics.lineTo(to_x, to_y);
   
-  // line.updateCache(_is_erasing ? "destination-out" : "source-over");
-  // line.graphics.clear();
+  line.updateCache(_is_erasing ? "destination-out" : "source-over");
+  line.graphics.clear();
 
   easlejs_stage.update();
 };
