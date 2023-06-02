@@ -1,6 +1,7 @@
 let notebook = null;
 let canvas_container = null;
 let easlejs_stage = null;
+let line = null;
 
 let pen_color = '#4169e1';
 let pen_size = 0.25;
@@ -194,6 +195,8 @@ const canvas_load_id = async (_id) => {
     feather.replace();  
     
     easlejs_stage = new createjs.Stage("notebook-canvas");
+    line = easlejs_stage.addChild(new createjs.Shape());
+    line.cache(0,0,16000,16000);
 
     const pickr = Pickr.create({
       el: '.action-color-picker',
@@ -260,36 +263,41 @@ const create_pointer_data = (evt) => {
       },
     };
   }
+  pointer_data[evt.pointerId].buttons = evt.buttons;
 };
 
 const update_pointer_data = (evt) => {
-  pointer_data[evt.pointerId].buttons = evt.buttons;
   pointer_data[evt.pointerId].position.x = evt.clientX;
   pointer_data[evt.pointerId].position.y = evt.clientY;
 };
+
+const is_erasing_including_buttons = (pointer_id) => {
+  return (is_erasing && (pointer_data[pointer_id].buttons & 1)) || (pointer_data[pointer_id].buttons & 32) || (pointer_data[pointer_id].buttons & 2);
+}
 
 const draw_line = (evt, from_x, from_y, to_x, to_y) => {
   if (evt.pressure < 0.0001) {
     return;
   }
 
-  const line = new createjs.Shape();
+  const _is_erasing = is_erasing_including_buttons(evt.pointerId);
+
   line.graphics
-    .setStrokeStyle((1 + pen_size * MAX_PEN_SIZE_PIXELS) * evt.pressure, 'round')
+    .setStrokeStyle((1 + pen_size * MAX_PEN_SIZE_PIXELS) * evt.pressure * (_is_erasing ? 2.0 : 1.0), 'round')
     .beginStroke(pen_color);
   line.graphics.moveTo(from_x, from_y);
   line.graphics.lineTo(to_x, to_y);
-  easlejs_stage.addChild(line);
+  
+  line.updateCache(_is_erasing ? "destination-out" : "source-over");
+  line.graphics.clear();
+
   easlejs_stage.update();
 };
 
 const on_pointer_down = (evt) => {
   create_pointer_data(evt);
 
-  if ((is_erasing && (pointer_data[evt.pointerId].buttons & 1)) || (pointer_data[evt.pointerId].buttons & 32) || (pointer_data[evt.pointerId].buttons & 2)) {
-    // TODO handle erasing
-  }
-  else if (pointer_data[evt.pointerId].buttons & 1) {
+  if ((pointer_data[evt.pointerId].buttons & 1) || (pointer_data[evt.pointerId].buttons & 32) || (pointer_data[evt.pointerId].buttons & 2)) {
     draw_line(evt, evt.clientX, evt.clientY, evt.clientX, evt.clientY);
   }
 
@@ -299,11 +307,7 @@ const on_pointer_down = (evt) => {
 const on_pointer_move = (evt) => {
   create_pointer_data(evt);
 
-  if ((is_erasing && (pointer_data[evt.pointerId].buttons & 1)) || (pointer_data[evt.pointerId].buttons & 32) || (pointer_data[evt.pointerId].buttons & 2)) {
-    // TODO handle erasing
-    return;
-  }
-  else if (pointer_data[evt.pointerId].buttons & 1) {
+  if ((pointer_data[evt.pointerId].buttons & 1) || (pointer_data[evt.pointerId].buttons & 32) || (pointer_data[evt.pointerId].buttons & 2)) {
     draw_line(evt, pointer_data[evt.pointerId].position.x, pointer_data[evt.pointerId].position.y, evt.clientX, evt.clientY);
   }
 
