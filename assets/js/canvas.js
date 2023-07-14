@@ -4,6 +4,7 @@ let canvas_container = null;
 let easlejs_stage = null;
 let line = null;
 let page = 0;
+const dpi = window.devicePixelRatio;
 
 let pen_color = '#4169e1';
 let pen_size = 0.2;
@@ -55,8 +56,12 @@ const canvas_load_id = async (_id, _page) => {
   canvas.oncontextmenu = (evt) => {
     evt.preventDefault()
   };
-  canvas.width = canvas_container_bounding_rectangle.width;
-  canvas.height = canvas_container_bounding_rectangle.height;
+
+  canvas.width = canvas_container_bounding_rectangle.width * dpi;
+  canvas.height = canvas_container_bounding_rectangle.height * dpi;
+  canvas.style.width = `${canvas_container_bounding_rectangle.width}px`;
+  canvas.style.height = `${canvas_container_bounding_rectangle.height}px`;
+
   canvas.id = 'notebook-canvas';
   canvas.classList = 'notebook-canvas';
   canvas.onpointerdown = on_pointer_down;
@@ -69,8 +74,10 @@ const canvas_load_id = async (_id, _page) => {
     }
     const canvas_container_bounding_rectangle = document.querySelector('.notebook-backdrop').getBoundingClientRect();
     const canvas = document.querySelector('#notebook-canvas');
-    canvas.width = canvas_container_bounding_rectangle.width;
-    canvas.height = canvas_container_bounding_rectangle.height;
+    canvas.width = canvas_container_bounding_rectangle.width * dpi;
+    canvas.height = canvas_container_bounding_rectangle.height * dpi;
+    canvas.style.width = `${canvas_container_bounding_rectangle.width}px`;
+    canvas.style.height = `${canvas_container_bounding_rectangle.height}px`;
     setTimeout(() => {
       if (easlejs_stage) {
         easlejs_stage.update();
@@ -326,6 +333,7 @@ const create_pointer_data = (evt) => {
     pointer_data[evt.pointerId] = {
       pointerType: evt.pointerType,
       buttons: evt.buttons,
+      isErasing: false,
       position: {
         x: evt.clientX,
         y: evt.clientY,
@@ -344,46 +352,62 @@ const is_erasing_including_buttons = (pointer_id) => {
   return (is_erasing && (pointer_data[pointer_id].buttons & 1)) || (pointer_data[pointer_id].buttons & 32) || (pointer_data[pointer_id].buttons & 2);
 }
 
-const draw_line = (evt, from_x, from_y, to_x, to_y) => {
+const create_line = (evt, from_x, from_y, to_x, to_y) => {
   if (evt.pressure < 0.0001) {
     return;
   }
+  from_x *= dpi;
+  from_y *= dpi;
+  to_x *= dpi;
+  to_y *= dpi;
 
   const _is_erasing = is_erasing_including_buttons(evt.pointerId);
-  const pressure_multiplier = Math.pow(evt.pressure, 2) * 4;
+  pointer_data[evt.pointerId].isErasing = _is_erasing;
 
   line.graphics
-    .setStrokeStyle((1 + pen_size * MAX_PEN_SIZE_PIXELS) * pressure_multiplier * (_is_erasing ? 2.0 : 1.0), 'round')
+    .setStrokeStyle((1 + pen_size * MAX_PEN_SIZE_PIXELS) * (_is_erasing ? 2.0 : 1.0), 'round', 'round')
     .beginStroke(pen_color);
   line.graphics.moveTo(from_x, from_y);
   line.graphics.lineTo(to_x, to_y);
-  
-  line.updateCache(_is_erasing ? "destination-out" : "source-over");
-  line.graphics.clear();
+  line.updateCache(pointer_data[evt.pointerId].isErasing ? "destination-out" : "source-over");
 
+  easlejs_stage.update();
+};
+
+const continue_line = (evt, from_x, from_y, to_x, to_y) => {
+  if (evt.pressure < 0.0001) {
+    return;
+  }
+  from_x *= dpi;
+  from_y *= dpi;
+  to_x *= dpi;
+  to_y *= dpi;
+
+  line.graphics.lineTo(to_x, to_y);
+  line.updateCache(pointer_data[evt.pointerId].isErasing ? "destination-out" : "source-over");
   easlejs_stage.update();
 };
 
 const on_pointer_down = (evt) => {
   create_pointer_data(evt);
-
   if ((pointer_data[evt.pointerId].buttons & 1) || (pointer_data[evt.pointerId].buttons & 32) || (pointer_data[evt.pointerId].buttons & 2)) {
-    draw_line(evt, evt.clientX, evt.clientY, evt.clientX, evt.clientY);
+    create_line(evt, evt.clientX, evt.clientY, evt.clientX, evt.clientY);
   }
-
   update_pointer_data(evt);
 };
 
 const on_pointer_move = (evt) => {
   create_pointer_data(evt);
-
   if ((pointer_data[evt.pointerId].buttons & 1) || (pointer_data[evt.pointerId].buttons & 32) || (pointer_data[evt.pointerId].buttons & 2)) {
-    draw_line(evt, pointer_data[evt.pointerId].position.x, pointer_data[evt.pointerId].position.y, evt.clientX, evt.clientY);
+    continue_line(evt, pointer_data[evt.pointerId].position.x, pointer_data[evt.pointerId].position.y, evt.clientX, evt.clientY);
   }
-
   update_pointer_data(evt);
 };
 
 const on_pointer_up = (evt) => {
-  save_canvas();
+  if ((pointer_data[evt.pointerId].buttons & 1) || (pointer_data[evt.pointerId].buttons & 32) || (pointer_data[evt.pointerId].buttons & 2)) {
+    line.graphics.clear();
+    easlejs_stage.update();
+    save_canvas();
+  }
 };
